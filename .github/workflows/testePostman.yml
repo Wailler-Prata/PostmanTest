@@ -1,0 +1,35 @@
+name: Postman Tests
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install -g newman && npm install -g newman-reporter-htmlextra
+
+    - name: Run Postman tests
+      run: newman run PetStore.postman_collection.json -e PetStore.postman_environment.json -r htmlextra,cli
+
+    - name: Rename file for Git-Hub Pages
+      run: mv ./newman/*.html ./newman/index.html
+
+    - name: Deploy report page
+      uses: peaceiris/actions-gh-pages@v3
+      # If you're changing the branch from main,
+      # also change the `main` in `refs/heads/main`
+      # below accordingly.
+      if: ${{ always() && github.ref == 'refs/heads/main' }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./newman/
